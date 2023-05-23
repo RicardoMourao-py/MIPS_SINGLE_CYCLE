@@ -32,7 +32,7 @@ begin
 	
 	saida(0) <= '1' when (functOUopcode = op_OR or functOUopcode = op_SLT) else '0';
 	saida(1) <= '1' when (functOUopcode = op_LW or functOUopcode = op_SW or functOUopcode = op_BEQ 
-								 or functOUopcode = op_AND or functOUopcode = op_SUB or functOUopcode = op_SLT)
+								 or functOUopcode = op_ADD or functOUopcode = op_SUB or functOUopcode = op_SLT)
 								 else '0';
 	saida(2) <= '1' when (functOUopcode = op_BEQ or functOUopcode = op_SUB or functOUopcode = op_SLT) else '0' ;
 end architecture;

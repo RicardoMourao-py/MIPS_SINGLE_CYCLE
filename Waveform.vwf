@@ -1,8 +1,8 @@
 /*<simulation_settings>
-<ftestbench_cmd>quartus_eda --gen_testbench --tool=modelsim_oem --format=vhdl --write_settings_files=off TopLevel -c TopLevel --vector_source="C:/DESCOMP/ATV_17/Waveform.vwf" --testbench_file="C:/DESCOMP/ATV_17/simulation/qsim/Waveform.vwf.vht"</ftestbench_cmd>
-<ttestbench_cmd>quartus_eda --gen_testbench --tool=modelsim_oem --format=vhdl --write_settings_files=off TopLevel -c TopLevel --vector_source="C:/DESCOMP/ATV_17/Waveform.vwf" --testbench_file="C:/DESCOMP/ATV_17/simulation/qsim/Waveform.vwf.vht"</ttestbench_cmd>
-<fnetlist_cmd>quartus_eda --write_settings_files=off --simulation --functional=on --flatten_buses=off --tool=modelsim_oem --format=vhdl --output_directory="C:/DESCOMP/ATV_17/simulation/qsim/" TopLevel -c TopLevel</fnetlist_cmd>
-<tnetlist_cmd>quartus_eda --write_settings_files=off --simulation --functional=off --flatten_buses=off --timescale=1ps --tool=modelsim_oem --format=vhdl --output_directory="C:/DESCOMP/ATV_17/simulation/qsim/" TopLevel -c TopLevel</tnetlist_cmd>
+<ftestbench_cmd>quartus_eda --gen_testbench --tool=modelsim_oem --format=vhdl --write_settings_files=off TopLevel -c TopLevel --vector_source="C:/DESCOMP/MIPS_SINGLE_CYCLE/Waveform.vwf" --testbench_file="C:/DESCOMP/MIPS_SINGLE_CYCLE/simulation/qsim/Waveform.vwf.vht"</ftestbench_cmd>
+<ttestbench_cmd>quartus_eda --gen_testbench --tool=modelsim_oem --format=vhdl --write_settings_files=off TopLevel -c TopLevel --vector_source="C:/DESCOMP/MIPS_SINGLE_CYCLE/Waveform.vwf" --testbench_file="C:/DESCOMP/MIPS_SINGLE_CYCLE/simulation/qsim/Waveform.vwf.vht"</ttestbench_cmd>
+<fnetlist_cmd>quartus_eda --write_settings_files=off --simulation --functional=on --flatten_buses=off --tool=modelsim_oem --format=vhdl --output_directory="C:/DESCOMP/MIPS_SINGLE_CYCLE/simulation/qsim/" TopLevel -c TopLevel</fnetlist_cmd>
+<tnetlist_cmd>quartus_eda --write_settings_files=off --simulation --functional=off --flatten_buses=off --timescale=1ps --tool=modelsim_oem --format=vhdl --output_directory="C:/DESCOMP/MIPS_SINGLE_CYCLE/simulation/qsim/" TopLevel -c TopLevel</tnetlist_cmd>
 <modelsim_script>onerror {exit -code 1}
 vlib work
 vcom -work work TopLevel.vho
