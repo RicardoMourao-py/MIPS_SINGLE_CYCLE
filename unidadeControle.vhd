@@ -5,7 +5,7 @@ entity unidadeControle is
   generic (
     larguraOpCode: natural := 6;
     larguraFunct: natural := 6;
-    larguraSinaisControle: natural := 15
+    larguraSinaisControle: natural := 17
   );
 
   port ( opcode : in std_logic_vector(larguraOpCode-1 downto 0);
@@ -27,17 +27,22 @@ architecture comportamento of unidadeControle is
   constant op_BEQ : std_logic_vector(larguraOpCode-1 downto 0) := "000100";
   constant op_JMP : std_logic_vector(larguraOpCode-1 downto 0) := "000010";
 
+  constant op_LUI  : std_logic_vector(larguraOpCode-1 downto 0) := "001111";
+  constant op_ORI  : std_logic_vector(larguraOpCode-1 downto 0) := "001101";
+  
   begin
-    saida <="011000000010000" when (opcode = "000000" and funct = op_AND) else
-            "011000000010000" when (opcode = "000000" and funct = op_OR) else
-				"011000000010000" when (opcode = "000000" and funct = op_ADD) else
-				"011000000010000" when (opcode = "000000" and funct = op_SUB) else
-				"011000000010000" when (opcode = "000000" and funct = op_SLT) else
-            "001110001101010" when (opcode = op_LW) else
-            "000110101100001" when (opcode = op_SW) else
-            "000000010000100" when (opcode = op_BEQ) else
-				"100000001000000" when (opcode = op_JMP) else
-            "000000000000000";
+    saida <="01100000000100000" when (opcode = "000000" and funct = op_AND) else
+            "01100000000100000" when (opcode = "000000" and funct = op_OR) else
+				"01100000000100000" when (opcode = "000000" and funct = op_ADD) else
+				"01100000000100000" when (opcode = "000000" and funct = op_SUB) else
+				"01100000000100000" when (opcode = "000000" and funct = op_SLT) else
+            "00101100011001010" when (opcode = op_LW) else
+            "00001101011000001" when (opcode = op_SW) else
+            "00000000100000100" when (opcode = op_BEQ) else
+				"10000000010000000" when (opcode = op_JMP) else
+				"00100001111011000" when (opcode = op_LUI) else
+				"00111001101000000" when (opcode = op_ORI) else
+            "00000000000000000";
 
               
 end architecture;

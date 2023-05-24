@@ -5,7 +5,7 @@ entity TopLevel is
   -- Total de bits das entradas e saidas
   generic ( 
 		larguraEndereco : natural := 32;
-		larguraSinaisControle : natural := 15;
+		larguraSinaisControle : natural := 17;
 		simulacao       : boolean := TRUE
 	 );
   port (
@@ -13,6 +13,7 @@ entity TopLevel is
 		KEY: in std_logic_vector(3 downto 0);
 		ROM_OUT: out std_logic_vector(larguraEndereco-1 downto 0);
 		ULA_OUT: out std_logic_vector(larguraEndereco-1 downto 0);
+		ULA_A, ULA_B : out std_logic_vector(larguraEndereco-1 downto 0);
 		PC_OUT: out std_logic_vector(larguraEndereco-1 downto 0);
 		SINAIS_CONTROLE: out std_logic_vector(larguraSinaisControle-1 downto 0)
     );
@@ -78,14 +79,18 @@ signal opCode_UC : std_logic_vector (5 downto 0);
 
 signal muxBEQJMP : std_logic;
 signal rt_rd : std_logic;
+signal ORI : std_logic; -- sinal p/ nova instrução ORI
 signal habilitaEscritaReg : std_logic;
 signal rt_imediato : std_logic;
 signal opCode : std_logic_vector (5 downto 0);
 signal tipoR : std_logic;	
-signal ULA_mem : std_logic;
+signal ULA_mem : std_logic_vector(1 downto 0);
 signal BEQ : std_logic;
 signal habLeituraMEM : std_logic;
 signal habEscritaMEM : std_logic;
+
+--------------------------- Sinais da Instrução LUI ----------------------------------
+signal saidaLUI : std_logic_vector (larguraEndereco-1 downto 0);
 
 begin
 
@@ -137,7 +142,8 @@ RAM  : entity work.RAMMIPS
 Extensor  : entity work.estendeSinalGenerico
 					 port map (
 								  estendeSinal_IN => imediato,
-								  estendeSinal_OUT => saidaEstendeSinal
+								  estendeSinal_OUT => saidaEstendeSinal,
+								  selORI => ORI
 								  );
 
 -- O port map completo do muxProxPC:			  
@@ -172,10 +178,14 @@ muxSaiRegs: entity work.muxGenerico2x1
 						saida_MUX => saidaMuxSaiRegs
 					 );
 
+-- saida LUI
+saidaLUI <= imediato & "0000000000000000";
+
 -- O port map completo do muxSaiRAM:			  
-muxSaiRAM: entity work.muxGenerico2x1
+muxSaiRAM: entity work.muxGenerico4x1
 					 port map (
 						entradaA_MUX => saidaULA, entradaB_MUX => saidaRAM,
+						entradaC_MUX => x"00000000", entradaD_MUX => saidaLUI,
 						seletor_MUX => ULA_mem,
 						saida_MUX => saidaMuxSaiRAM
 					 );
@@ -198,13 +208,14 @@ UNIDADE_CONTROLE_ULA: entity work.unidadeControleULA
 
 -- Ligando sinais da Unidade de controle
 SINAIS_CONTROLE <= sinaisControle;
-muxBEQJMP <= sinaisControle(14);
-rt_rd <= sinaisControle(13);
-habilitaEscritaReg <= sinaisControle(12); 
-rt_imediato <= sinaisControle(11);
-opCode <= sinaisControle(10 downto 5);  -- opCode = opCode_UC
-tipoR <= sinaisControle(4);
-ULA_mem <= sinaisControle(3);
+muxBEQJMP <= sinaisControle(16);
+rt_rd <= sinaisControle(15);
+habilitaEscritaReg <= sinaisControle(14);
+ORI <= sinaisControle(13);
+rt_imediato <= sinaisControle(12);
+opCode <= sinaisControle(11 downto 6);  -- opCode = opCode_UC
+tipoR <= sinaisControle(5);
+ULA_mem <= sinaisControle(4 downto 3);
 BEQ <= sinaisControle(2);
 habLeituraMEM <= sinaisControle(1); 
 habEscritaMEM <= sinaisControle(0);
@@ -224,5 +235,7 @@ PC_OUT  <= saidaPC;
 
 -- Ligando sinais da ULA
 ULA_OUT <= saidaULA;
+ULA_A <= saidaREG1;
+ULA_B <= saidaMuxSaiRegs;
 
 end architecture;
