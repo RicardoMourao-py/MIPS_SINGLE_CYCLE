@@ -5,7 +5,7 @@ entity TopLevel is
   -- Total de bits das entradas e saidas
   generic ( 
 		larguraEndereco : natural := 32;
-		larguraSinaisControle : natural := 17;
+		larguraSinaisControle : natural := 20;
 		simulacao       : boolean := TRUE
 	 );
   port (
@@ -13,7 +13,6 @@ entity TopLevel is
 		KEY: in std_logic_vector(3 downto 0);
 		ROM_OUT: out std_logic_vector(larguraEndereco-1 downto 0);
 		ULA_OUT: out std_logic_vector(larguraEndereco-1 downto 0);
-		ULA_A, ULA_B : out std_logic_vector(larguraEndereco-1 downto 0);
 		PC_OUT: out std_logic_vector(larguraEndereco-1 downto 0);
 		SINAIS_CONTROLE: out std_logic_vector(larguraSinaisControle-1 downto 0)
     );
@@ -36,6 +35,9 @@ signal proxPC : std_logic_vector (larguraEndereco-1 downto 0);
 --------------------------- Sinais do muxProxPC2 ----------------------------------
 signal proxPC2 : std_logic_vector (larguraEndereco-1 downto 0);
 signal imediatoShiftDois : std_logic_vector (25 downto 0);
+
+--------------------------- Sinais do muxProxPC3 ----------------------------------
+signal proxPC3 : std_logic_vector (larguraEndereco-1 downto 0);
 
 --------------------------- Sinais do PC ----------------------------------
 signal saidaPC : std_logic_vector (larguraEndereco-1 downto 0);
@@ -68,6 +70,9 @@ signal saidaZeroULA : std_logic;
 signal saidaULA : std_logic_vector (larguraEndereco-1 downto 0);
 signal ULActrl : std_logic_vector(2 downto 0);
 
+--------------------------- Sinais do MUXBEQ ----------------------------------
+signal saidaMuxBEQ : std_logic;
+
 --------------------------- Sinais da RAM ----------------------------------
 signal saidaRAM : std_logic_vector (larguraEndereco-1 downto 0);
 
@@ -77,15 +82,17 @@ signal sinaisControle : std_logic_vector (larguraSinaisControle-1 downto 0);
 signal funct_UC : std_logic_vector (5 downto 0);
 signal opCode_UC : std_logic_vector (5 downto 0);
 
+signal JR : std_logic;
 signal muxBEQJMP : std_logic;
-signal rt_rd : std_logic;
-signal ORI : std_logic; -- sinal p/ nova instrução ORI
+signal rt_rd : std_logic_vector(1 downto 0); -- valido para jal
+signal ORI : std_logic; -- sinal p/ nova instrução ORI e também válido p/ ANDI
 signal habilitaEscritaReg : std_logic;
 signal rt_imediato : std_logic;
 signal opCode : std_logic_vector (5 downto 0);
 signal tipoR : std_logic;	
 signal ULA_mem : std_logic_vector(1 downto 0);
 signal BEQ : std_logic;
+signal BNE : std_logic;
 signal habLeituraMEM : std_logic;
 signal habEscritaMEM : std_logic;
 
@@ -112,7 +119,7 @@ incrementa2 :  entity work.somaConstante2  generic map (larguraDados => larguraE
 						
 -- O port map completo do Program Counter
 PC : entity work.registradorGenerico   generic map (larguraDados => larguraEndereco)
-				 port map (DIN => proxPC2, DOUT => saidaPC, ENABLE => '1', CLK => CLK, RST => '0');
+				 port map (DIN => proxPC3, DOUT => saidaPC, ENABLE => '1', CLK => CLK, RST => '0');
 
 -- O port map completo da ROM
 ROM : entity work.ROMMIPS 
@@ -128,6 +135,14 @@ REGS : entity work.bancoReg   generic map (larguraDados => larguraEndereco)
 ULA  : entity work.ULAMIPS  generic map(larguraEndereco => larguraEndereco)
 				 port map (A => saidaREG1, B => saidaMuxSaiRegs, resultado32 => saidaULA, 
 				 saidaZero => saidaZeroULA, sel => ULActrl(1 downto 0), inverteB => ULActrl(2));
+
+-- O port map completo do muxBEQ:			  
+muxBEQ: entity work.muxGenerico2x1_ULA generic map(larguraDados => 1)
+					 port map (
+						entradaA_MUX => not saidaZeroULA, entradaB_MUX => saidaZeroULA,
+						seletor_MUX => BEQ,
+						saida_MUX => saidaMuxBEQ
+					 );				 
 
 -- O port map completo da RAM:
 RAM  : entity work.RAMMIPS
@@ -150,7 +165,7 @@ Extensor  : entity work.estendeSinalGenerico
 muxProxPC: entity work.muxGenerico2x1
 					 port map (
 						entradaA_MUX => saidaIncrementa, entradaB_MUX => saidaIncrementa2,
-						seletor_MUX => saidaZeroULA and BEQ,
+						seletor_MUX => saidaMuxBEQ and (BEQ or BNE),
 						saida_MUX => proxPC
 					 );
 					 
@@ -161,11 +176,20 @@ muxProxPC2: entity work.muxGenerico2x1
 						seletor_MUX => muxBEQJMP,
 						saida_MUX => proxPC2
 					 );
+	
+-- O port map completo do muxProxPC2:			  
+muxProxPC3: entity work.muxGenerico2x1
+					 port map (
+						entradaA_MUX => proxPC2, entradaB_MUX => saidaREG1,
+						seletor_MUX => JR,
+						saida_MUX => proxPC3
+					 );
 					 
--- O port map completo do muxEntraRegs:			  
-muxEntraRegs: entity work.muxEntraRegsGenerico2x1
+-- O port map completo do muxEntraRegs:			  			  
+muxEntraRegs: entity work.muxGenerico4x1 generic map (larguraDados => 5)
 					 port map (
 						entradaA_MUX => REG2, entradaB_MUX => REG3,
+						entradaC_MUX => 5x"1F", entradaD_MUX => 5x"00",
 						seletor_MUX => rt_rd,
 						saida_MUX => saidaMuxEntraRegs
 					 );
@@ -185,7 +209,7 @@ saidaLUI <= imediato & "0000000000000000";
 muxSaiRAM: entity work.muxGenerico4x1
 					 port map (
 						entradaA_MUX => saidaULA, entradaB_MUX => saidaRAM,
-						entradaC_MUX => x"00000000", entradaD_MUX => saidaLUI,
+						entradaC_MUX => saidaIncrementa, entradaD_MUX => saidaLUI,
 						seletor_MUX => ULA_mem,
 						saida_MUX => saidaMuxSaiRAM
 					 );
@@ -208,15 +232,17 @@ UNIDADE_CONTROLE_ULA: entity work.unidadeControleULA
 
 -- Ligando sinais da Unidade de controle
 SINAIS_CONTROLE <= sinaisControle;
-muxBEQJMP <= sinaisControle(16);
-rt_rd <= sinaisControle(15);
-habilitaEscritaReg <= sinaisControle(14);
-ORI <= sinaisControle(13);
-rt_imediato <= sinaisControle(12);
-opCode <= sinaisControle(11 downto 6);  -- opCode = opCode_UC
-tipoR <= sinaisControle(5);
-ULA_mem <= sinaisControle(4 downto 3);
-BEQ <= sinaisControle(2);
+JR <= sinaisControle(19);                                                                               
+muxBEQJMP <= sinaisControle(18);                                    
+rt_rd <= sinaisControle(17 downto 16);                              
+habilitaEscritaReg <= sinaisControle(15);                                                    
+ORI <= sinaisControle(14); -- Também válido p/ o andi               
+rt_imediato <= sinaisControle(13);                                  
+opCode <= sinaisControle(12 downto 7);  -- opCode = opCode_UC       
+tipoR <= sinaisControle(6);                                          
+ULA_mem <= sinaisControle(5 downto 4);                                  
+BEQ <= sinaisControle(3);
+BNE <= sinaisControle(2);
 habLeituraMEM <= sinaisControle(1); 
 habEscritaMEM <= sinaisControle(0);
 
@@ -235,7 +261,5 @@ PC_OUT  <= saidaPC;
 
 -- Ligando sinais da ULA
 ULA_OUT <= saidaULA;
-ULA_A <= saidaREG1;
-ULA_B <= saidaMuxSaiRegs;
 
 end architecture;

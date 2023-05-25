@@ -26,14 +26,22 @@ architecture comportamento of unidadeControleULA is
 	constant op_SW  : std_logic_vector(larguraOpCode-1 downto 0) := "101011";
 	constant op_BEQ : std_logic_vector(larguraOpCode-1 downto 0) := "000100";
 	constant op_ORI  : std_logic_vector(larguraOpCode-1 downto 0) := "001101";
+	constant op_ADDI  : std_logic_vector(larguraOpCode-1 downto 0) := "001000";
+	constant op_SLTI : std_logic_vector(larguraOpCode-1 downto 0) := "001010";
+	constant op_BNE : std_logic_vector(larguraOpCode-1 downto 0) := "000101";
 	-- sinais
 	signal functOUopcode: std_logic_vector(larguraFunct-1 downto 0);
 begin
 	functOUopcode <= funct when (tipoR='1') else opcode;
 	
-	saida(0) <= '1' when (functOUopcode = op_OR or functOUopcode = op_SLT or functOUopcode = op_ORI) else '0';
-	saida(1) <= '1' when (functOUopcode = op_ADD or functOUopcode = op_SUB or functOUopcode = op_SLT 
-								 or functOUopcode = op_LW or functOUopcode = op_SW or functOUopcode = op_BEQ)
+	saida(0) <= '1' when (functOUopcode = op_OR or functOUopcode = op_SLT or functOUopcode = op_ORI
+								 or functOUopcode = op_SLTI) 
 								 else '0';
-	saida(2) <= '1' when (functOUopcode = op_BEQ or functOUopcode = op_SUB or functOUopcode = op_SLT) else '0' ;
+	saida(1) <= '1' when (functOUopcode = op_ADD or functOUopcode = op_SUB or functOUopcode = op_SLT 
+								 or functOUopcode = op_LW or functOUopcode = op_SW or functOUopcode = op_BEQ
+								 or functOUopcode = op_ADDI or functOUopcode = op_SLTI or functOUopcode = op_BNE)
+								 else '0';
+	saida(2) <= '1' when (functOUopcode = op_BEQ or functOUopcode = op_SUB or functOUopcode = op_SLT
+								 or functOUopcode = op_SLTI or functOUopcode = op_BNE) 
+								 else '0' ;
 end architecture;
