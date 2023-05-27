@@ -6,11 +6,14 @@ entity TopLevel is
   generic ( 
 		larguraEndereco : natural := 32;
 		larguraSinaisControle : natural := 20;
-		simulacao       : boolean := TRUE
+		simulacao       : boolean := FALSE
 	 );
   port (
 		CLOCK_50 : in std_logic;
 		KEY: in std_logic_vector(3 downto 0);
+		HEX0, HEX1, HEX2, HEX3, HEX4, HEX5:		out std_logic_vector(6 downto 0);
+		LEDR  : 		out std_logic_vector(9 downto 0);
+		SW:				in std_logic_vector(9 downto 0);
 		ROM_OUT: out std_logic_vector(larguraEndereco-1 downto 0);
 		ULA_OUT: out std_logic_vector(larguraEndereco-1 downto 0);
 		PC_OUT: out std_logic_vector(larguraEndereco-1 downto 0);
@@ -99,15 +102,14 @@ signal habEscritaMEM : std_logic;
 --------------------------- Sinais da Instrução LUI ----------------------------------
 signal saidaLUI : std_logic_vector (larguraEndereco-1 downto 0);
 
+--------------------------- Sinais do MuxPlaca ----------------------------------
+signal saidaMuxPlaca : 		std_logic_vector(larguraEndereco-1 downto 0);
+
 begin
 
 ------------------------------------ Instanciando os componentes --------------------------------
-gravar:  if simulacao generate
+
 CLK <= KEY(0);
-else generate
-detectorSub0: work.edgeDetector(bordaSubida)
-        port map (clk => CLOCK_50, entrada => (not KEY(0)), saida => CLK);
-end generate;
 
 -- O port map completo do incrementa 
 incrementa :  entity work.somaConstante  generic map (larguraDados => larguraEndereco, constante => 4)
@@ -229,6 +231,70 @@ UNIDADE_CONTROLE_ULA: entity work.unidadeControleULA
 								tipoR => tipoR,
 								saida => ULActrl
 							);				
+							
+-------------------------------------------CONEXÂO PLACA -----------------------------------------------
+
+-- O port map completo do muxPlaca:			  
+muxPlaca: entity work.muxGenerico2x1 generic map (larguraDados => larguraEndereco)
+					 port map (
+						entradaA_MUX => saidaPC, entradaB_MUX => saidaULA,
+						seletor_MUX => SW(0),
+						saida_MUX => saidaMuxPlaca
+					 );
+					 
+--- Decodificadores Binários de 7 segmentos
+DECODER0 :  entity work.conversorHex7Seg
+					port map(
+						dadoHex => saidaMuxPlaca(3 downto 0),
+						apaga => '0',
+						negativo => '0',
+						overFlow => '0',
+						saida7seg => HEX0
+					);
+DECODER1 :  entity work.conversorHex7Seg
+					port map(
+						dadoHex => saidaMuxPlaca(7 downto 4),
+						apaga => '0',
+						negativo => '0',
+						overFlow => '0',
+						saida7seg => HEX1
+					);
+DECODER2 :  entity work.conversorHex7Seg
+					port map(
+						dadoHex => saidaMuxPlaca(11 downto 8),
+						apaga => '0',
+						negativo => '0',
+						overFlow => '0',
+						saida7seg => HEX2
+					);
+DECODER3 :  entity work.conversorHex7Seg
+					port map(
+						dadoHex => saidaMuxPlaca(15 downto 12),
+						apaga => '0',
+						negativo => '0',
+						overFlow => '0',
+						saida7seg => HEX3
+					);
+DECODER4 :  entity work.conversorHex7Seg
+					port map(
+						dadoHex => saidaMuxPlaca(19 downto 16),
+						apaga => '0',
+						negativo => '0',
+						overFlow => '0',
+						saida7seg => HEX4
+					);
+DECODER5 :  entity work.conversorHex7Seg
+					port map(
+						dadoHex => saidaMuxPlaca(23 downto 20),
+						apaga => '0',
+						negativo => '0',
+						overFlow => '0',
+						saida7seg => HEX5
+					);
+					
+LEDR(3 downto 0) <= saidaMuxPlaca(27 downto 24);
+LEDR(7 downto 4) <= saidaMuxPlaca(31 downto 28);
+--------------------------------------------------------------------------------------------------------
 
 -- Ligando sinais da Unidade de controle
 SINAIS_CONTROLE <= sinaisControle;

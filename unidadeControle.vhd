@@ -43,7 +43,7 @@ architecture comportamento of unidadeControle is
 				"00011000000001000000" when (opcode = "000000" and funct = op_ADD) else
 				"00011000000001000000" when (opcode = "000000" and funct = op_SUB) else
 				"00011000000001000000" when (opcode = "000000" and funct = op_SLT) else
-				"10011000000001000000" when (opcode = "000000" and funct = op_JR) else    
+				"10000000000001000000" when (opcode = "000000" and funct = op_JR) else    
             "00001011000110010010" when (opcode = op_LW) else
             "00000011010110000001" when (opcode = op_SW) else
             "00000000001000001000" when (opcode = op_BEQ) else
